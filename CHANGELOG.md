@@ -150,3 +150,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2018-01-18]: docs: document public API with example usage
 - [2018-02-04]: fix: handle context cancellation in long-running tasks
 - [2018-02-09]: refactor: replace global state with dependency injection
+- [2018-02-17]: refactor: extract middleware into separate package
