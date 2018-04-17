@@ -154,3 +154,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2018-03-01]: feat: add distributed tracing with OpenTelemetry
 - [2018-03-17]: refactor: replace error strings with typed sentinel errors
 - [2018-03-26]: fix: resolve goroutine leak in connection pool
+- [2018-04-17]: refactor: separate transport layer from business logic
