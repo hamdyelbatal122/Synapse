@@ -158,3 +158,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2018-04-17]: feat: add Prometheus metrics instrumentation
 - [2018-04-26]: fix: correct integer overflow in metric accumulator
 - [2018-04-26]: chore: add integration tests for database layer
+- [2018-05-04]: perf: reduce allocations in hot path with sync.Pool
