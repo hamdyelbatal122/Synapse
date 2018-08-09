@@ -166,3 +166,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2018-06-06]: fix: resolve data race detected by race detector
 - [2018-06-30]: feat: implement exponential backoff for retries
 - [2018-07-15]: chore: configure golangci-lint with custom rules
+- [2018-08-09]: fix: sanitize user input before shell execution
