@@ -168,3 +168,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2018-07-15]: chore: configure golangci-lint with custom rules
 - [2018-08-09]: fix: sanitize user input before shell execution
 - [2018-08-13]: feat: add gRPC health check protocol support
+- [2018-08-27]: perf: use buffered channels to reduce blocking
