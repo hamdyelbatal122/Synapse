@@ -171,3 +171,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2018-08-27]: perf: use buffered channels to reduce blocking
 - [2018-09-04]: feat: implement graceful shutdown with signal handling
 - [2018-09-11]: refactor: consolidate configuration parsing into config package
+- [2018-09-16]: docs: add GoDoc comments to exported functions
