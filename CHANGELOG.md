@@ -290,3 +290,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-06-13]: refactor: use typed errors instead of string comparisons in core module
 - [2022-06-13]: refactor: extract middleware chain into composable handlers in core module
 - [2022-06-14]: refactor: consolidate configuration with Viper library in core module
+- [2022-06-15]: chore: update go.mod to use latest stable dependencies in core module
