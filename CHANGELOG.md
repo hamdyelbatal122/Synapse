@@ -312,3 +312,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-07-05]: refactor: replace global logger with context-based logging in core module
 - [2022-07-06]: fix: validate input bounds before array index access in core module
 - [2022-07-06]: feat: implement graceful shutdown with drain timeout in core module
+- [2022-07-06]: refactor: use typed errors instead of string comparisons in core module
