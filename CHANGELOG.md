@@ -330,3 +330,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-07-29]: chore: configure golangci-lint with project rules in core module
 - [2022-07-29]: fix: correct JSON field naming in API responses in core module
 - [2022-07-29]: perf: reduce syscalls with buffered I/O wrappers in core module
+- [2022-08-02]: feat: implement circuit breaker for external API calls in core module
