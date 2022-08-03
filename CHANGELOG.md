@@ -332,3 +332,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-07-29]: perf: reduce syscalls with buffered I/O wrappers in core module
 - [2022-08-02]: feat: implement circuit breaker for external API calls in core module
 - [2022-08-03]: feat: add distributed tracing with OpenTelemetry in core module
+- [2022-08-03]: chore: add GitHub Actions workflow for cross-platform builds in core module
