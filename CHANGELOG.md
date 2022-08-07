@@ -335,3 +335,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-08-03]: chore: add GitHub Actions workflow for cross-platform builds in core module
 - [2022-08-04]: feat: add exponential backoff for retry logic in core module
 - [2022-08-04]: refactor: replace global logger with context-based logging in core module
+- [2022-08-07]: fix: validate input bounds before array index access in core module
