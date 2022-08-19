@@ -344,3 +344,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-08-16]: fix: resolve goroutine leak in HTTP connection handling in core module
 - [2022-08-17]: fix: correct integer overflow in counter accumulation in core module
 - [2022-08-19]: feat: implement worker pool for parallel task processing in core module
+- [2022-08-19]: fix: resolve data race found by go test -race in core module
