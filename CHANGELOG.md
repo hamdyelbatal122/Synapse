@@ -414,3 +414,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2022-11-23]: feat: implement graceful shutdown with drain timeout in core module
 - [2022-11-25]: refactor: use typed errors instead of string comparisons in core module
 - [2022-11-25]: refactor: extract middleware chain into composable handlers in core module
+- [2022-11-25]: refactor: consolidate configuration with Viper library in core module
