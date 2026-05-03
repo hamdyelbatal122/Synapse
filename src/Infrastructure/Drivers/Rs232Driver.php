@@ -21,7 +21,8 @@ final class Rs232Driver implements SerialDriver
      */
     public function configure(array $options = []): void
     {
-        $this->delimiter = (string) ($options['delimiter'] ?? "\n");
+        $delimiter = (string) ($options['delimiter'] ?? "\n");
+        $this->delimiter = $delimiter !== '' ? $delimiter : "\n";
     }
 
     /**
@@ -42,7 +43,8 @@ final class Rs232Driver implements SerialDriver
      */
     public function parseInbound(string $chunk, array $context = []): array
     {
-        $records = array_filter(array_map('trim', explode($this->delimiter, $chunk)));
+        $delimiter = $this->delimiter !== '' ? $this->delimiter : "\n";
+        $records = array_filter(array_map('trim', explode($delimiter, $chunk)));
 
         $frames = [];
         foreach ($records as $record) {

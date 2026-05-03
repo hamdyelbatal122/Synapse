@@ -11,15 +11,17 @@ use Illuminate\Contracts\Container\Container;
 final class DriverRegistry
 {
     /**
-     * @var array<string, class-string<SerialDriver>>
+     * @var array<string, string>
      */
     private array $drivers = [];
 
     public function __construct(private readonly Container $container)
     {
-        /** @var array<string, class-string<SerialDriver>> $configured */
-        $configured = (array) config('synapse.drivers', []);
-        $this->drivers = $configured;
+        foreach ((array) config('synapse.drivers', []) as $name => $class) {
+            if (is_string($name) && is_string($class)) {
+                $this->drivers[$name] = $class;
+            }
+        }
     }
 
     public function register(string $name, string $driverClass): void
@@ -43,7 +45,7 @@ final class DriverRegistry
     }
 
     /**
-     * @return array<string, class-string<SerialDriver>>
+     * @return array<string, string>
      */
     public function all(): array
     {

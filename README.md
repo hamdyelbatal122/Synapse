@@ -1,9 +1,9 @@
 # Synapse
 
-[![CI](https://github.com/hamdyelbatal122/intensify/actions/workflows/ci.yml/badge.svg)](https://github.com/hamdyelbatal122/intensify/actions/workflows/ci.yml)
+[![CI](https://github.com/hamdyelbatal122/Synapse/actions/workflows/ci.yml/badge.svg)](https://github.com/hamdyelbatal122/Synapse/actions/workflows/ci.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/hamzi/synapse.svg?style=flat-square)](https://packagist.org/packages/hamzi/synapse)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue?style=flat-square)](https://php.net)
-[![Laravel](https://img.shields.io/badge/Laravel-11%2F12-red?style=flat-square)](https://laravel.com)
+[![Laravel](https://img.shields.io/badge/Laravel-11%2F12%2F13-red?style=flat-square)](https://laravel.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 > **Neural bridge for Laravel × Hardware.** Connect thermal printers, IoT sensors, RS-232 scales, barcode scanners, and any serial device to your Laravel application — all through a clean, driver-based architecture and the browser's Web Serial API.
@@ -103,11 +103,11 @@ src/
 
 ## Requirements
 
-| Dependency | Version |
-|---|---|
-| PHP | `^8.2` |
-| Laravel | `^11.0` or `^12.0` |
-| Livewire | `^3.0` |
+| Dependency | Version | Notes |
+|---|---|---|
+| PHP | `^8.2` | PHP 8.3+ recommended for Laravel 13 |
+| Laravel | `^11.0 \| ^12.0 \| ^13.0` | All actively supported versions |
+| Livewire | `^3.0` | |
 
 ---
 
@@ -359,25 +359,48 @@ Or in config:
 
 <script src="{{ asset('vendor/synapse/synapse-serial.js') }}"></script>
 <script>
-  const synapse = new SynapseSerial({
+  const bridge = new SynapseBridge({
     ingestUrl: '{{ route("synapse.ingest") }}',
     driver:    'raw-json',
+    baudRate:  115200,
     csrfToken: document.head.querySelector('meta[name="csrf-token"]').content,
   });
 
-  document.getElementById('connect').addEventListener('click', () => {
-    synapse.connect();
-  });
+  document.getElementById('connect').addEventListener('click', () => bridge.connect());
 </script>
 ```
 
-**Available events:**
+**Listening for events (dispatched on `window`):**
 
 ```js
-synapse.on('connected',    ({ portLabel }) => console.log('Connected to', portLabel));
-synapse.on('disconnected', ()             => console.log('Disconnected'));
-synapse.on('frame',        ({ frames })   => console.log('Frames processed:', frames));
-synapse.on('error',        ({ message })  => console.error(message));
+// Fired after each inbound chunk is processed
+window.addEventListener('synapse-status', (e) => {
+  console.log('Connected:', e.detail.connected);
+  console.log('Driver:', e.detail.driver);
+  console.log('Frames received:', e.detail.frames);
+});
+
+// Fired for every raw chunk POSTed to the backend
+window.addEventListener('synapse-frame-received', (e) => {
+  console.log('Raw chunk:', e.detail.chunk);
+});
+```
+
+**Alpine.js integration (built-in):**
+
+```html
+<div x-data="synapseConnector()">
+  <button @click="connect" :disabled="connecting" x-text="connected ? 'Disconnect' : 'Connect'"></button>
+  <span x-show="connected" x-text="'Frames: ' + frames"></span>
+</div>
+
+<script>
+  window.synapseConfig = {
+    ingestUrl: '{{ route("synapse.ingest") }}',
+    driver: 'raw-json',
+    baudRate: 115200,
+  };
+</script>
 ```
 
 > **Browser support:** Chrome 89+, Edge 89+. Not supported in Firefox or Safari.
