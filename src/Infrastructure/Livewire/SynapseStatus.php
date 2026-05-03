@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hamzi\Synapse\Infrastructure\Livewire;
 
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -23,7 +24,7 @@ final class SynapseStatus extends Component
         $this->frames = (int) ($payload['frames'] ?? 0);
     }
 
-    public function render()
+    public function render(): View
     {
         return view('synapse::livewire.status');
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Hamzi\Synapse\Tests\Unit;
 
 use Hamzi\Synapse\Infrastructure\Drivers\RawJsonDriver;
-use Hamzi\Synapse\Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 
 final class RawJsonDriverTest extends TestCase
 {

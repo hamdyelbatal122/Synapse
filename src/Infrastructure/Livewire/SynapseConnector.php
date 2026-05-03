@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hamzi\Synapse\Infrastructure\Livewire;
 
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 final class SynapseConnector extends Component
@@ -18,7 +19,7 @@ final class SynapseConnector extends Component
         $this->portLabel = $label;
     }
 
-    public function render()
+    public function render(): View
     {
         return view('synapse::livewire.connector');
     }

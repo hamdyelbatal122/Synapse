@@ -46,12 +46,9 @@ final class SynapseServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js/synapse-serial.js' => public_path('vendor/synapse/synapse-serial.js'),
         ], 'synapse-assets');
 
-        Blade::component('synapse-connector', 'synapse::components.connector');
-        Blade::component('synapse-status', 'synapse::components.status');
+        Blade::anonymousComponentPath(__DIR__.'/../resources/views/components', 'synapse');
 
-        if (class_exists(Livewire::class)) {
-            Livewire::component('synapse-connector', SynapseConnector::class);
-            Livewire::component('synapse-status', SynapseStatus::class);
-        }
+        Livewire::component('synapse-connector', SynapseConnector::class);
+        Livewire::component('synapse-status', SynapseStatus::class);
     }
 }

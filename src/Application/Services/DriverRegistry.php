@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Hamzi\Synapse\Application\Services;
 
 use Hamzi\Synapse\Domain\Contracts\SerialDriver;
+use Hamzi\Synapse\Exceptions\SynapseException;
 use Illuminate\Contracts\Container\Container;
-use InvalidArgumentException;
 
 final class DriverRegistry
 {
@@ -32,7 +32,7 @@ final class DriverRegistry
         $className = $this->drivers[$name] ?? null;
 
         if ($className === null) {
-            throw new InvalidArgumentException("Synapse driver [{$name}] is not registered.");
+            throw SynapseException::driverNotFound($name);
         }
 
         /** @var SerialDriver $driver */
