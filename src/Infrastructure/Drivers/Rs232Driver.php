@@ -52,7 +52,7 @@ final class Rs232Driver implements SerialDriver
             $payload = [
                 'raw' => $record,
                 'segments' => $segments,
-                'weight' => $segments[0] ?? null,
+                'weight' => $segments[0],
             ];
 
             $frames[] = SerialFrame::now($this->name(), $payload, $context);
