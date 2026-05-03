@@ -1,54 +1,197 @@
-# Intensify — Website Template
+# Hamzi/Synapse
 
-A bold, responsive **website template** built with HTML, CSS, and JavaScript. Designed for modern web presence — clean layout, smooth animations, and easy customization.
+[![CI](https://github.com/hamzi/synapse/actions/workflows/ci.yml/badge.svg)](https://github.com/hamzi/synapse/actions/workflows/ci.yml)
 
-## ✨ Features
+`Hamzi/Synapse` is a professional Laravel package that acts as a **Neural Bridge** between Laravel and physical hardware using:
 
-- 🎨 Bold and modern design
-- 📱 Fully responsive across all devices
-- ⚡ Smooth CSS animations and transitions
-- 🔧 Easy to customize content and styles
-- 🌐 Cross-browser compatible
-- 📦 No external dependencies
+- Web Serial API (browser side)
+- Livewire + Alpine.js (real-time UI layer)
+- Driver-based protocol architecture (ESC/POS, RS232, RAW/JSON)
+- Hardware-to-Event/Eloquent mapping pipeline
 
-## 🛠️ Tech Stack
+Built for IoT, POS peripherals, cashier accessories, barcode readers, scales, and high-throughput sensor streams.
 
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)
+## Core Capabilities
 
-## 🚀 Getting Started
+- Clean PSR-4 package architecture with Service Layers
+- Driver Registry for protocol-specific parsing/encoding
+- Browser serial stream ingestion endpoint (`/synapse/ingest`)
+- Ready Blade components:
+  - `<x-synapse-connector />`
+  - `<x-synapse-status />`
+- Livewire components for reactive status and port awareness
+- ESC/POS printing engine from Blade view to binary commands
+- IoT frame buffering to reduce Laravel request overhead
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/hamdyelbatal122/intensify.git
-   cd intensify
-   ```
+## Directory Structure
 
-2. **Open in browser**
-   ```bash
-   open index.html
-   ```
-
-## 📁 Project Structure
-
+```text
+src/
+├── Application/
+│   └── Services/
+│       ├── DriverRegistry.php
+│       ├── HardwareMessageService.php
+│       └── MessageRouter.php
+├── Domain/
+│   ├── Contracts/
+│   │   └── SerialDriver.php
+│   ├── DTO/
+│   │   └── SerialFrame.php
+│   ├── Events/
+│   │   └── ProductScanned.php
+│   └── Services/
+│       └── IoTFrameBuffer.php
+├── Infrastructure/
+│   ├── Drivers/
+│   │   ├── EscPosDriver.php
+│   │   ├── RawJsonDriver.php
+│   │   └── Rs232Driver.php
+│   ├── Http/Controllers/
+│   │   └── IngestController.php
+│   ├── Livewire/
+│   │   ├── SynapseConnector.php
+│   │   └── SynapseStatus.php
+│   └── Printing/
+│       ├── BladeEscPosRenderer.php
+│       └── EscPosBuilder.php
+├── Facades/
+│   └── Synapse.php
+├── SynapseManager.php
+└── SynapseServiceProvider.php
 ```
-intensify/
-├── index.html        # Main page
-├── css/
-│   └── style.css     # Stylesheet
-├── js/
-│   └── main.js       # Scripts
-├── images/           # Assets
-└── README.md
+
+## Installation
+
+```bash
+composer require hamzi/synapse
 ```
 
-## 🎨 Customization
+Publish config and assets:
 
-- Update text content in `index.html`
-- Modify colors and fonts in `css/style.css`
-- Adjust animations and interactivity in `js/main.js`
+```bash
+php artisan vendor:publish --tag=synapse-config
+php artisan vendor:publish --tag=synapse-assets
+```
 
-## 📄 License
+Include the package JS in your layout:
 
-This project is open source and available under the [MIT License](LICENSE).
+```blade
+<script src="{{ asset('vendor/synapse/synapse-serial.js') }}"></script>
+```
+
+## Service Provider Registration
+
+Auto-discovered by Laravel. Manual registration (if needed):
+
+```php
+// config/app.php
+'providers' => [
+   Hamzi\Synapse\SynapseServiceProvider::class,
+],
+```
+
+## Driver Contract (Custom Hardware)
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Synapse\Drivers;
+
+use Hamzi\Synapse\Domain\Contracts\SerialDriver;
+use Hamzi\Synapse\Domain\DTO\SerialFrame;
+
+final class MyHardwareDriver implements SerialDriver
+{
+   public function name(): string
+   {
+      return 'my-hardware';
+   }
+
+   public function configure(array $options = []): void
+   {
+   }
+
+   public function encodeOutbound(array|string $payload): string
+   {
+      return is_string($payload) ? $payload : json_encode($payload, JSON_THROW_ON_ERROR);
+   }
+
+   public function parseInbound(string $chunk, array $context = []): array
+   {
+      return [SerialFrame::now($this->name(), ['raw' => $chunk], $context)];
+   }
+}
+```
+
+## Web Serial + Backend Snippet
+
+```js
+const bridge = new window.SynapseBridge({
+   driver: 'raw-json',
+   baudRate: 115200,
+   ingestUrl: '/synapse/ingest',
+});
+
+await bridge.connect();
+await bridge.write({ command: 'ping' });
+```
+
+The bridge continuously reads data from the serial port and POSTs chunks to Laravel ingestion with contextual metadata.
+
+## Hardware to Event/Eloquent Mapping
+
+Configure in `config/synapse.php`:
+
+```php
+'mappings' => [
+   [
+      'driver' => 'raw-json',
+      'payload_field' => 'type',
+      'equals' => 'barcode.scan',
+      'event' => Hamzi\Synapse\Domain\Events\ProductScanned::class,
+      'event_payload_field' => 'barcode',
+   ],
+],
+```
+
+## Printing Engine (Blade -> ESC/POS)
+
+```php
+$bytes = app(Hamzi\Synapse\Infrastructure\Printing\BladeEscPosRenderer::class)
+   ->render('receipts.ticket', ['order' => $order]);
+
+app('synapse')->encode('escpos', $bytes);
+```
+
+## UI Components
+
+```blade
+<x-synapse-connector />
+<x-synapse-status />
+
+<livewire:synapse-connector />
+<livewire:synapse-status />
+```
+
+## Automated Tags and Releases
+
+This repository uses GitHub Actions with Release Please:
+
+- `.github/workflows/release-please.yml` creates Release PRs from Conventional Commits
+- `.github/workflows/release-on-tag.yml` publishes GitHub Releases on `v*.*.*` tags
+
+Use Conventional Commit messages (`feat:`, `fix:`, `chore:`) to trigger proper semantic versioning.
+
+## Quality
+
+```bash
+composer install
+composer format -- --test
+composer test
+```
+
+## License
+
+MIT
