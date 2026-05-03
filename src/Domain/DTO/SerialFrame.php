@@ -8,6 +8,10 @@ use DateTimeImmutable;
 
 final class SerialFrame
 {
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $context
+     */
     public function __construct(
         public readonly string $driver,
         public readonly array $payload,
@@ -15,6 +19,10 @@ final class SerialFrame
         public readonly array $context = [],
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $context
+     */
     public static function now(string $driver, array $payload, array $context = []): self
     {
         return new self(

@@ -16,6 +16,9 @@ final class SynapseStatus extends Component
 
     public int $frames = 0;
 
+    /**
+     * @param  array<string, mixed>  $payload
+     */
     #[On('synapse-status-updated')]
     public function updateStatus(array $payload): void
     {

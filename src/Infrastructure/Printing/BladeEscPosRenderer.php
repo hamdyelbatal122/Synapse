@@ -10,6 +10,9 @@ final class BladeEscPosRenderer
 {
     public function __construct(private readonly Factory $views) {}
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function render(string $view, array $data = []): string
     {
         $content = trim($this->views->make($view, $data)->render());

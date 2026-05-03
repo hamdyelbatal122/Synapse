@@ -23,6 +23,9 @@ final class RawJsonDriver implements SerialDriver
         return 'raw-json';
     }
 
+    /**
+     * @param  array<string, mixed>  $options
+     */
     public function configure(array $options = []): void
     {
         $delimiter = (string) ($options['delimiter'] ?? "\n");
@@ -31,6 +34,9 @@ final class RawJsonDriver implements SerialDriver
         $this->buffer = new IoTFrameBuffer($delimiter, $maxBytes);
     }
 
+    /**
+     * @param  array<int|string, mixed>|string  $payload
+     */
     public function encodeOutbound(array|string $payload): string
     {
         if (is_string($payload)) {
@@ -40,6 +46,10 @@ final class RawJsonDriver implements SerialDriver
         return json_encode($payload, JSON_THROW_ON_ERROR)."\n";
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<int, SerialFrame>
+     */
     public function parseInbound(string $chunk, array $context = []): array
     {
         $frames = [];

@@ -14,11 +14,17 @@ final class EscPosDriver implements SerialDriver
         return 'escpos';
     }
 
+    /**
+     * @param  array<string, mixed>  $options
+     */
     public function configure(array $options = []): void
     {
         // ESC/POS formatting options are handled in printing service.
     }
 
+    /**
+     * @param  array<int|string, mixed>|string  $payload
+     */
     public function encodeOutbound(array|string $payload): string
     {
         if (is_array($payload)) {
@@ -30,6 +36,10 @@ final class EscPosDriver implements SerialDriver
         return $payload;
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<int, SerialFrame>
+     */
     public function parseInbound(string $chunk, array $context = []): array
     {
         $barcode = trim($chunk);

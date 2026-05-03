@@ -16,11 +16,17 @@ final class Rs232Driver implements SerialDriver
         return 'rs232';
     }
 
+    /**
+     * @param  array<string, mixed>  $options
+     */
     public function configure(array $options = []): void
     {
         $this->delimiter = (string) ($options['delimiter'] ?? "\n");
     }
 
+    /**
+     * @param  array<int|string, mixed>|string  $payload
+     */
     public function encodeOutbound(array|string $payload): string
     {
         if (is_array($payload)) {
@@ -30,6 +36,10 @@ final class Rs232Driver implements SerialDriver
         return $payload.$this->delimiter;
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<int, SerialFrame>
+     */
     public function parseInbound(string $chunk, array $context = []): array
     {
         $records = array_filter(array_map('trim', explode($this->delimiter, $chunk)));

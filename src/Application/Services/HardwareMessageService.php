@@ -14,6 +14,7 @@ final class HardwareMessageService
     ) {}
 
     /**
+     * @param  array<string, mixed>  $context
      * @return array<int, SerialFrame>
      */
     public function ingest(string $driverName, string $rawChunk, array $context = []): array
@@ -28,6 +29,9 @@ final class HardwareMessageService
         return $frames;
     }
 
+    /**
+     * @param  array<int|string, mixed>|string  $payload
+     */
     public function encode(string $driverName, array|string $payload): string
     {
         return $this->drivers->resolve($driverName)->encodeOutbound($payload);

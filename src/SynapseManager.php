@@ -25,6 +25,7 @@ final class SynapseManager
     /**
      * Parse an inbound chunk through the named driver and route resulting frames.
      *
+     * @param  array<string, mixed>  $context
      * @return array<int, SerialFrame>
      */
     public function ingest(string $driver, string $chunk, array $context = []): array
@@ -34,6 +35,8 @@ final class SynapseManager
 
     /**
      * Encode an outbound payload through the named driver.
+     *
+     * @param  array<int|string, mixed>|string  $payload
      */
     public function encode(string $driver, array|string $payload): string
     {
@@ -42,6 +45,8 @@ final class SynapseManager
 
     /**
      * Render a Blade view to ESC/POS bytes for thermal printing.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function print(string $view, array $data = []): string
     {
