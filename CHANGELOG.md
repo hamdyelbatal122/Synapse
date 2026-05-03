@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0](https://github.com/hamdyelbatal122/Synapse/compare/v0.2.0...v0.3.0) (2026-05-03)
+
+
+### Features
+
+* Laravel 13 support, PHP matrix CI, README corrections, PHPStan level 8 ([bdc8732](https://github.com/hamdyelbatal122/Synapse/commit/bdc8732b96561afe0da7832dec97d856706379bb))
+
+
+### Bug Fixes
+
+* add typed array PHPDoc annotations — resolves all 24 PHPStan errors ([1887064](https://github.com/hamdyelbatal122/Synapse/commit/1887064977f81eaaa01d039ad35d469d09712a0d))
+* **phpstan:** remove redundant ?? null on non-empty-list offset ([bb52890](https://github.com/hamdyelbatal122/Synapse/commit/bb5289077996f3c096747be08379fc4e8f80daa5))
+
 ## [0.2.0](https://github.com/hamdyelbatal122/Synapse/compare/v0.1.0...v0.2.0) (2026-05-03)
 
 ### Features
