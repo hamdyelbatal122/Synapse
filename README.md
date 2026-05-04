@@ -19,10 +19,14 @@
 - [Quick Start](#quick-start)
 - [Available Drivers](#available-drivers)
   - [RAW / JSON (ESP32, Arduino, IoT)](#raw--json-driver)
+  - [Barcode Line Driver (USB/TTL Scanners)](#barcode-line-driver)
+  - [RFID ASCII Driver (STX/ETX Readers)](#rfid-ascii-driver)
+  - [Fingerprint Packet Driver (Binary UART)](#fingerprint-packet-driver)
   - [ESC/POS (Thermal Printers)](#escpos-driver)
   - [RS-232 (Scales, Legacy Devices)](#rs-232-driver)
 - [Creating a Custom Driver](#creating-a-custom-driver)
 - [Web Serial Integration](#web-serial-integration)
+  - [Backend Direct Serial Mode](#backend-direct-serial-mode)
   - [Auto-Reconnect](#auto-reconnect)
   - [Browser Compatibility](#browser-compatibility)
 - [Hardware → Events & Eloquent](#hardware--events--eloquent)
@@ -89,6 +93,9 @@ src/
 ├── Infrastructure/
 │   ├── Drivers/
 │   │   ├── RawJsonDriver.php         ← ESP32, Arduino, MQTT payloads
+│   │   ├── BarcodeLineDriver.php     ← Barcode scanners (ASCII line mode)
+│   │   ├── RfidAsciiDriver.php       ← STX/ETX RFID ASCII readers
+│   │   ├── FingerprintPacketDriver.php ← Binary UART fingerprint modules
 │   │   ├── EscPosDriver.php          ← Thermal printers + barcode scanners
 │   │   └── Rs232Driver.php           ← RS-232 scales and legacy devices
 │   ├── Http/Controllers/
@@ -101,7 +108,8 @@ src/
 │       └── BladeEscPosRenderer.php   ← Renders Blade → ESC/POS bytes
 │
 ├── Console/Commands/
-│   └── MakeDriverCommand.php         ← php artisan portflow:make-driver
+│   ├── MakeDriverCommand.php         ← php artisan portflow:make-driver
+│   └── ListenSerialCommand.php       ← php artisan portflow:listen
 │
 ├── Exceptions/
 │   └── PortFlowException.php
@@ -161,8 +169,28 @@ php artisan vendor:publish --tag=portflow-stubs
 **2. Drop in the Livewire connector component:**
 
 ```blade
-<livewire:portflow-connector />
+<livewire:portflow-connector :baud-rate="115200" :auto-connect-on-load="true" />
 ```
+
+The connector now bootstraps sensible defaults from `config/portflow.php` automatically, including the ingest URL, default driver, and baud rate. Override them from Blade when needed instead of rendering a select box for the end user.
+
+If `:baud-rate` is explicitly passed in Blade, PortFlow gives it priority over remembered localStorage values.
+
+Useful Blade props:
+
+```blade
+<livewire:portflow-connector
+  :baud-rate="115200"
+  driver="raw-json"
+  :auto-connect-on-load="true"
+  :context="['device' => 'esp32-line-a']"
+  :filters="[['usbVendorId' => 6790, 'usbProductId' => 29987]]"
+  browser-chunk-event="esp32-browser-frame"
+  livewire-chunk-event="esp32-livewire-frame"
+/>
+```
+
+When `auto-connect-on-load` is enabled, PortFlow asks the browser for already-authorized serial devices with `navigator.serial.getPorts()` and reconnects automatically after reload when permission still exists.
 
 **3. Listen for hardware events in your application:**
 
@@ -403,6 +431,10 @@ final class WeightReceived implements SerialEvent
     ingestUrl: '{{ route("portflow.ingest") }}',
     driver:    'raw-json',
     baudRate:  115200,
+    autoConnectOnLoad: true,
+    filters: [{ usbVendorId: 6790, usbProductId: 29987 }],
+    browserChunkEvent: 'esp32-browser-frame',
+    livewireChunkEvent: 'esp32-livewire-frame',
     csrfToken: document.head.querySelector('meta[name="csrf-token"]').content,
   });
 
@@ -415,9 +447,16 @@ final class WeightReceived implements SerialEvent
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `baudRate` | `number` | `9600` | Serial baud rate |
+| `autoConnectOnLoad` | `boolean` | `true` | Reconnect automatically after reload when the browser already trusts the port |
 | `driver` | `string` | `'raw-json'` | PortFlow driver name |
 | `ingestUrl` | `string` | `'/portflow/ingest'` | Backend endpoint |
 | `csrfToken` | `string` | auto-detected | CSRF token for POST |
+| `rememberBaudRate` | `boolean` | `true` | Persist the last selected baud rate in `localStorage` |
+| `filters` | `array` | `[]` | Web Serial port filters used by `requestPort()` |
+| `browserChunkEvent` | `string` | `'portflow-frame-received'` | Browser event name emitted for received chunks |
+| `livewireChunkEvent` | `string` | `'portflow-frame-received'` | Livewire event name emitted for received chunks |
+| `livewireStatusEvent` | `string` | `'portflow-status-updated'` | Livewire event name emitted for connection status |
+| `livewireErrorEvent` | `string` | `'portflow-error'` | Livewire event name emitted for bridge errors |
 | `autoReconnect` | `boolean` | `true` | Auto-reconnect on disconnect |
 | `maxRetries` | `number` | `5` | Max reconnect attempts |
 | `retryDelay` | `number` | `2000` | Base delay in ms (exponential back-off) |
@@ -458,6 +497,71 @@ window.addEventListener('portflow-unsupported', (e) => {
 ### Auto-Reconnect
 
 When a serial connection drops unexpectedly, the bridge automatically attempts to reconnect using **exponential back-off** (2 s, 4 s, 8 s, …) up to `maxRetries` attempts. This is enabled by default and requires no configuration.
+
+### Backend Direct Serial Mode
+
+Some devices are easier or safer to integrate from the backend (Linux service, kiosk daemon, headless station) rather than browser Web Serial. PortFlow includes an Artisan listener:
+
+```bash
+php artisan portflow:listen /dev/ttyUSB0 --driver=barcode-line --baud=115200
+```
+
+Windows example:
+
+```bash
+php artisan portflow:listen COM3 --driver=barcode-line --baud=115200
+```
+
+Advanced UART parameters:
+
+```bash
+php artisan portflow:listen /dev/ttyUSB1 \
+  --driver=rfid-ascii \
+  --baud=9600 \
+  --parity=none \
+  --data-bits=8 \
+  --stop-bits=1 \
+  --flow-control=none \
+  --context='{"station":"gate-a"}'
+```
+
+Show incoming serial payloads in the console while still ingesting frames:
+
+```bash
+php artisan portflow:listen /dev/ttyUSB0 \
+  --driver=raw-json \
+  --baud=921600 \
+  --show-data=1 \
+  --show-data-format=json
+```
+
+Data preview options:
+
+- `--show-data=1` enables payload preview logs.
+- `--show-data-format=auto|raw|plain|json|hex|base64` controls rendering format.
+- `--show-data-max=512` limits displayed bytes per chunk to keep logs readable.
+
+Security and hardening notes:
+
+- Device path validation supports `/dev/*` on Linux/macOS and `COMx` / `\\.\COMx` on Windows.
+- Use `portflow.backend.allowed_devices` to allowlist exact/glob device paths.
+- Listener configures serial parameters with platform-native tooling (`stty` on POSIX, `mode` on Windows).
+- Ingest now validates decoded base64 chunk size against `max_chunk_bytes`.
+
+`config/portflow.php` backend section:
+
+```php
+'backend' => [
+    'allowed_devices' => [
+        '/dev/ttyUSB0',
+        '/dev/ttyACM*',
+        'COM*',
+        '\\\\.\\COM*',
+    ],
+    'default_chunk_bytes' => 256,
+    'default_read_sleep_us' => 20000,
+],
+```
 
 To disable:
 
@@ -679,10 +783,10 @@ The backend will emit one complete `SerialFrame` with `{ "sensor": "temp", "valu
 
 ```blade
 {{-- Connection toggle button + port label --}}
-<x-portflow-connector />
+<x-portflow::connector />
 
 {{-- Real-time driver status badge --}}
-<x-portflow-status />
+<x-portflow::status />
 
 {{-- Browser compatibility warning (no Alpine required) --}}
 <x-portflow::portflow-browser-check>
@@ -817,6 +921,107 @@ return [
     ],
 ];
 ```
+
+### Barcode Line Driver
+
+**Use case:** common 1D/2D barcode scanners in serial mode (USB CDC, TTL UART, RS-232 adapters).
+
+Most scanners send ASCII text followed by a line terminator (`\r`, `\n`, or both). `barcode-line` normalizes this into:
+
+```php
+[
+  'barcode' => '4006381333931',
+  'raw' => '4006381333931\r',
+  'length' => 13,
+]
+```
+
+Recommended config:
+
+```php
+'default_driver' => 'barcode-line',
+
+'driver_options' => [
+    'barcode-line' => [
+        'delimiter' => "\n",
+        'strip_prefix' => [],
+        'strip_suffix' => ["\r", "\n", "\t"],
+    ],
+],
+```
+
+### RFID ASCII Driver
+
+**Use case:** 125kHz serial readers (for example ID-12/ID-20 family) that send framed ASCII.
+
+A common frame format is:
+
+- `STX (0x02)`
+- ASCII tag bytes
+- `CR` + `LF`
+- `ETX (0x03)`
+
+`rfid-ascii` parses this safely and emits payload like:
+
+```php
+[
+  'tag' => '7A005B0FF8D6',
+  'raw' => '7A005B0FF8D6\r\n',
+  'raw_hex' => '023741303035423046463844360D0A03',
+  'format' => 'stx-etx-ascii',
+]
+```
+
+Recommended config:
+
+```php
+'driver_options' => [
+    'rfid-ascii' => [
+        'stx' => "\x02",
+        'etx' => "\x03",
+        'uppercase' => true,
+    ],
+],
+```
+
+### Fingerprint Packet Driver
+
+**Use case:** optical/capacitive UART fingerprint modules that speak binary packet protocol (common start code `0xEF01`).
+
+Unlike barcode/RFID text streams, fingerprint sensors are binary. PortFlow now supports binary chunks over web ingest using `chunk_encoding: base64` automatically in the JS bridge.
+
+`fingerprint-packet` validates checksums and emits parsed packet metadata:
+
+```php
+[
+  'packet_type' => 7,
+  'packet_type_name' => 'ack',
+  'address_hex' => 'FFFFFFFF',
+  'data_hex' => '00',
+  'checksum' => 11,
+  'checksum_calculated' => 11,
+  'checksum_valid' => true,
+  'raw_hex' => 'EF01FFFFFFFF07000300000B',
+]
+```
+
+Recommended config:
+
+```php
+'driver_options' => [
+    'fingerprint-packet' => [
+        'start_code_hex' => 'EF01',
+    ],
+],
+```
+
+### Device Patterns Supported Out-of-the-box
+
+| Device Type | Common Serial Pattern | Recommended Driver |
+|---|---|---|
+| Barcode scanners | ASCII + CR/LF terminator | `barcode-line` |
+| RFID serial readers | `STX + TAG + CRLF + ETX` | `rfid-ascii` |
+| Fingerprint sensors | Binary framed packets (`EF01 ... checksum`) | `fingerprint-packet` |
 
 ---
 

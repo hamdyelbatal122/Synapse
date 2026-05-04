@@ -17,4 +17,14 @@ final class PortFlowException extends RuntimeException
     {
         return new self("PortFlow driver [{$driver}] failed to encode payload: {$reason}");
     }
+
+    public static function invalidDriver(string $name, string $reason): self
+    {
+        return new self("PortFlow configuration error — driver [{$name}]: {$reason}.");
+    }
+
+    public static function invalidConfiguration(string $reason): self
+    {
+        return new self("PortFlow configuration error: {$reason}.");
+    }
 }

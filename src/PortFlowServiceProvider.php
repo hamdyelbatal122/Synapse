@@ -7,7 +7,10 @@ namespace Hamzi\PortFlow;
 use Hamzi\PortFlow\Application\Services\DriverRegistry;
 use Hamzi\PortFlow\Application\Services\HardwareMessageService;
 use Hamzi\PortFlow\Application\Services\MessageRouter;
+use Hamzi\PortFlow\Console\Commands\ListenSerialCommand;
 use Hamzi\PortFlow\Console\Commands\MakeDriverCommand;
+use Hamzi\PortFlow\Domain\Contracts\SerialDriver;
+use Hamzi\PortFlow\Exceptions\PortFlowException;
 use Hamzi\PortFlow\Infrastructure\Livewire\PortFlowConnector;
 use Hamzi\PortFlow\Infrastructure\Livewire\PortFlowStatus;
 use Hamzi\PortFlow\Infrastructure\Printing\BladeEscPosRenderer;
@@ -42,6 +45,7 @@ final class PortFlowServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'portflow');
 
+        $this->validateConfiguration();
         $this->bootRateLimiter();
 
         $this->publishes([
@@ -64,15 +68,68 @@ final class PortFlowServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([MakeDriverCommand::class]);
+            $this->commands([
+                MakeDriverCommand::class,
+                ListenSerialCommand::class,
+            ]);
+        }
+    }
+
+    private function validateConfiguration(): void
+    {
+        /** @var array<string, mixed> $drivers */
+        $drivers = (array) config('portflow.drivers', []);
+
+        foreach ($drivers as $name => $class) {
+            if (! is_string($class)) {
+                throw PortFlowException::invalidDriver((string) $name, 'driver class must be a string');
+            }
+
+            if (! class_exists($class)) {
+                throw PortFlowException::invalidDriver((string) $name, "class [{$class}] does not exist");
+            }
+
+            if (! is_a($class, SerialDriver::class, true)) {
+                throw PortFlowException::invalidDriver((string) $name, "class [{$class}] must implement SerialDriver");
+            }
+        }
+
+        /** @var array<int, array<string, mixed>> $mappings */
+        $mappings = (array) config('portflow.mappings', []);
+
+        foreach ($mappings as $index => $mapping) {
+            /** @phpstan-ignore function.alreadyNarrowedType */
+            if (! is_array($mapping)) {
+                throw PortFlowException::invalidConfiguration("mappings[{$index}] must be an array");
+            }
+
+            if (isset($mapping['event'])) {
+                $eventClass = $mapping['event'];
+                if (! is_string($eventClass) || ! class_exists($eventClass)) {
+                    throw PortFlowException::invalidConfiguration("mappings[{$index}].event class [{$eventClass}] does not exist");
+                }
+            }
+
+            if (isset($mapping['model'])) {
+                $modelClass = $mapping['model'];
+                if (! is_string($modelClass) || ! class_exists($modelClass)) {
+                    throw PortFlowException::invalidConfiguration("mappings[{$index}].model class [{$modelClass}] does not exist");
+                }
+            }
         }
     }
 
     private function bootRateLimiter(): void
     {
         RateLimiter::for('portflow', function (Request $request) {
+            $by = $request->ip();
+
+            if ($request->user() !== null) {
+                $by .= '-'.$request->user()->getAuthIdentifier();
+            }
+
             return Limit::perMinute((int) config('portflow.ingest_rate_limit', 60))
-                ->by($request->ip());
+                ->by($by);
         });
     }
 }

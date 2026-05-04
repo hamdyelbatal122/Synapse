@@ -87,7 +87,9 @@ final class MessageRouter
         }
 
         if (! is_a($eventClass, SerialEvent::class, true)) {
-            Log::warning("[PortFlow] Event [{$eventClass}] does not implement SerialEvent. Consider adding 'implements SerialEvent' for type safety.");
+            Log::error("[PortFlow] Event [{$eventClass}] does not implement SerialEvent interface. Routing skipped. Add 'implements SerialEvent' to your event class.");
+
+            return;
         }
 
         $eventPayloadField = $mapping['event_payload_field'] ?? 'barcode';
