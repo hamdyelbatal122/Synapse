@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0](https://github.com/hamdyelbatal122/PortFlow/compare/v0.4.0...v0.5.0) (2026-05-04)
+
+
+### Features
+
+* professional hardening — rate limiting, queue routing, buffer persistence, reconnect, make:driver command, feature tests ([53abaad](https://github.com/hamdyelbatal122/PortFlow/commit/53abaadbbf6bc08c5b39a07b110f31692cf21c6c))
+
+
+### Bug Fixes
+
+* resolve PHPStan errors in MakeDriverCommand + comprehensive README rewrite ([68f359f](https://github.com/hamdyelbatal122/PortFlow/commit/68f359f60024469ed568b630200c144a2f2aaa87))
+
 ## [0.4.0](https://github.com/hamdyelbatal122/PortFlow/compare/v0.3.0...v0.4.0) (2026-05-04)
 
 
