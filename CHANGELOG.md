@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.2](https://github.com/hamdyelbatal122/PortFlow/compare/v0.5.1...v0.5.2) (2026-05-04)
+
+
+### Bug Fixes
+
+* remove duplicate file content + add browser compatibility support ([9447cf7](https://github.com/hamdyelbatal122/PortFlow/commit/9447cf79de47e35b74b5364eacb9b7466aae1b7c))
+
 ## [0.5.1](https://github.com/hamdyelbatal122/PortFlow/compare/v0.5.0...v0.5.1) (2026-05-04)
 
 
