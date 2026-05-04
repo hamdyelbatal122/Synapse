@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1](https://github.com/hamdyelbatal122/PortFlow/compare/v0.5.0...v0.5.1) (2026-05-04)
+
+
+### Bug Fixes
+
+* resolve all Pint code-style violations (CI Quality job) ([dece7be](https://github.com/hamdyelbatal122/PortFlow/commit/dece7be66f1c60f0a89d8cf8ec68fb8bc4df4d95))
+
 ## [0.5.0](https://github.com/hamdyelbatal122/PortFlow/compare/v0.4.0...v0.5.0) (2026-05-04)
 
 
