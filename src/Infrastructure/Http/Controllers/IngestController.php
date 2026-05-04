@@ -13,8 +13,8 @@ final class IngestController
     public function __invoke(Request $request, PortFlowManager $portflow): JsonResponse
     {
         $validated = $request->validate([
-            'driver' => ['nullable', 'string'],
-            'chunk' => ['required', 'string'],
+            'driver'  => ['nullable', 'string'],
+            'chunk'   => ['required', 'string', 'max:' . (int) config('portflow.max_chunk_bytes', 16384)],
             'context' => ['nullable', 'array'],
         ]);
 

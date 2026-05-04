@@ -45,4 +45,16 @@ final class IoTFrameBuffer
 
         return $remainder === '' ? null : $remainder;
     }
+
+    /** Return the raw pending bytes (used for cache persistence). */
+    public function getState(): string
+    {
+        return $this->buffer;
+    }
+
+    /** Restore pending bytes from a previously persisted state. */
+    public function setState(string $state): void
+    {
+        $this->buffer = $state;
+    }
 }
