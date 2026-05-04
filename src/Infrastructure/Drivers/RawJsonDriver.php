@@ -7,6 +7,7 @@ namespace Hamzi\PortFlow\Infrastructure\Drivers;
 use Hamzi\PortFlow\Domain\Contracts\SerialDriver;
 use Hamzi\PortFlow\Domain\DTO\SerialFrame;
 use Hamzi\PortFlow\Domain\Services\IoTFrameBuffer;
+use Illuminate\Support\Facades\Cache;
 use JsonException;
 
 final class RawJsonDriver implements SerialDriver
@@ -29,7 +30,7 @@ final class RawJsonDriver implements SerialDriver
     public function configure(array $options = []): void
     {
         $delimiter = (string) ($options['delimiter'] ?? "\n");
-        $maxBytes = (int) ($options['max_bytes'] ?? 16384);
+        $maxBytes  = (int) ($options['max_bytes'] ?? 16384);
 
         $this->buffer = new IoTFrameBuffer($delimiter, $maxBytes);
     }
@@ -47,11 +48,26 @@ final class RawJsonDriver implements SerialDriver
     }
 
     /**
+     * Parses inbound chunks.
+     *
+     * If `context['session_id']` is present the buffer state is loaded from
+     * the Laravel cache before parsing and saved back afterwards, so partial
+     * packets are correctly reassembled across separate HTTP requests.
+     *
      * @param  array<string, mixed>  $context
      * @return array<int, SerialFrame>
      */
     public function parseInbound(string $chunk, array $context = []): array
     {
+        $sessionId = isset($context['session_id']) ? (string) $context['session_id'] : null;
+        $cacheKey  = $sessionId !== null
+            ? 'portflow.buf.'.hash('sha256', $sessionId)
+            : null;
+
+        if ($cacheKey !== null) {
+            $this->buffer->setState((string) Cache::get($cacheKey, ''));
+        }
+
         $frames = [];
 
         foreach ($this->buffer->push($chunk) as $packet) {
@@ -65,6 +81,10 @@ final class RawJsonDriver implements SerialDriver
             }
 
             $frames[] = SerialFrame::now($this->name(), $decoded, $context);
+        }
+
+        if ($cacheKey !== null) {
+            Cache::put($cacheKey, $this->buffer->getState(), 300);
         }
 
         return $frames;

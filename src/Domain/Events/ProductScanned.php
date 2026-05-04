@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Hamzi\PortFlow\Domain\Events;
 
-final class ProductScanned
+use Hamzi\PortFlow\Domain\Contracts\SerialEvent;
+
+final class ProductScanned implements SerialEvent
 {
     /**
      * @param  array<string, mixed>  $context

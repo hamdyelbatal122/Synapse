@@ -4,15 +4,36 @@ declare(strict_types=1);
 
 namespace Hamzi\PortFlow\Application\Services;
 
+use Hamzi\PortFlow\Application\Jobs\RouteSerialFrameJob;
+use Hamzi\PortFlow\Domain\Contracts\SerialEvent;
 use Hamzi\PortFlow\Domain\DTO\SerialFrame;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 final class MessageRouter
 {
     public function __construct(private readonly Dispatcher $events) {}
 
+    /**
+     * Route a frame: dispatch to queue if enabled, otherwise route synchronously.
+     */
     public function route(SerialFrame $frame): void
+    {
+        if ((bool) config('portflow.queue_routing', false)) {
+            RouteSerialFrameJob::dispatch($frame);
+
+            return;
+        }
+
+        $this->routeSync($frame);
+    }
+
+    /**
+     * Execute routing synchronously — used directly and by RouteSerialFrameJob.
+     */
+    public function routeSync(SerialFrame $frame): void
     {
         /** @var array<int, array<string, mixed>> $mappings */
         $mappings = (array) config('portflow.mappings', []);
@@ -22,8 +43,16 @@ final class MessageRouter
                 continue;
             }
 
-            $this->dispatchMappedEvent($mapping, $frame);
-            $this->persistMappedModel($mapping, $frame);
+            try {
+                $this->dispatchMappedEvent($mapping, $frame);
+                $this->persistMappedModel($mapping, $frame);
+            } catch (Throwable $e) {
+                Log::error('[PortFlow] Frame routing failed', [
+                    'driver'  => $frame->driver,
+                    'error'   => $e->getMessage(),
+                    'payload' => $frame->payload,
+                ]);
+            }
         }
     }
 
@@ -38,7 +67,7 @@ final class MessageRouter
         }
 
         $payloadField = $mapping['payload_field'] ?? null;
-        $matchValue = $mapping['equals'] ?? null;
+        $matchValue   = $mapping['equals'] ?? null;
 
         if (! is_string($payloadField) || $matchValue === null) {
             return true;
@@ -55,6 +84,10 @@ final class MessageRouter
         $eventClass = $mapping['event'] ?? null;
         if (! is_string($eventClass) || ! class_exists($eventClass)) {
             return;
+        }
+
+        if (! is_a($eventClass, SerialEvent::class, true)) {
+            Log::warning("[PortFlow] Event [{$eventClass}] does not implement SerialEvent. Consider adding 'implements SerialEvent' for type safety.");
         }
 
         $eventPayloadField = $mapping['event_payload_field'] ?? 'barcode';

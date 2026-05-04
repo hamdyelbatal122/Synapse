@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Hamzi\PortFlow\Domain\Contracts\SerialDriver;
+use Hamzi\PortFlow\Domain\Contracts\SerialEvent;
+use Hamzi\PortFlow\Domain\DTO\SerialFrame;
+
+final class {{ class }} implements SerialDriver
+{
+    public function name(): string
+    {
+        return '{{ driverName }}';
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function configure(array $options = []): void
+    {
+        // Access options from config/portflow.php under driver_options.{{ driverName }}
+    }
+
+    /**
+     * @param  array<int|string, mixed>|string  $payload
+     */
+    public function encodeOutbound(array|string $payload): string
+    {
+        return is_string($payload)
+            ? $payload
+            : json_encode($payload, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<int, SerialFrame>
+     */
+    public function parseInbound(string $chunk, array $context = []): array
+    {
+        // Parse $chunk and return one SerialFrame per logical message.
+        return [
+            SerialFrame::now($this->name(), ['raw' => $chunk], $context),
+        ];
+    }
+}
